@@ -1,0 +1,12 @@
+.env
+deal_formatter_bot/data/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
