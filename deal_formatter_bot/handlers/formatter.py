@@ -146,14 +146,12 @@ async def _process_collection(
             # Mismatch / validation error from formatter
             results.append(f"{prefix}{result}")
         else:
-            # Wrap successful deal in a Markdown code block for easy Tap-To-Copy
-            results.append(f"{prefix}```text\n{result.text}\n```")
+            results.append(f"{prefix}{result.text}")
 
     combined_output = "\n\n---\n\n".join(results)
 
-    # Store last output for /plain commands (removing backticks so /plain is actually plain)
-    plain_output = combined_output.replace("```text\n", "").replace("\n```", "")
-    context.user_data[LAST_OUTPUT_KEY] = plain_output
+    # Store last output for /markdown and /plain commands
+    context.user_data[LAST_OUTPUT_KEY] = combined_output
 
     # Advance state back to IDLE so next message is treated as a new template,
     # unless user wants to process another collection (handled via callback).
@@ -161,7 +159,6 @@ async def _process_collection(
 
     await update.message.reply_text(
         combined_output,
-        parse_mode="Markdown",
         reply_markup=_build_action_keyboard(),
         disable_web_page_preview=True,
     )
@@ -186,7 +183,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         last = context.user_data.get(LAST_OUTPUT_KEY, "")
         if last:
             await query.message.reply_text(
-                f"📋 *Here's your output to copy:*\n\n```text\n{last}\n```",
+                f"📋 *Here's your output to copy:*\n\n{last}",
                 parse_mode="Markdown",
                 disable_web_page_preview=True,
             )
@@ -227,7 +224,7 @@ async def markdown_command(
         return
 
     await update.message.reply_text(
-        f"📝 *Markdown Output:*\n\n```text\n{last}\n```",
+        f"📝 *Markdown Output:*\n\n`{last}`",
         parse_mode="Markdown",
         disable_web_page_preview=True,
     )

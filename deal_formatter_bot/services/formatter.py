@@ -48,8 +48,11 @@ def build_deal(
         lines.append(parsed_template.header)
         lines.append("")  # blank separator
 
-    for label, link in zip(labels, links):
-        lines.append(f"{label} : {link}")
+    for i, (label, link) in enumerate(zip(labels, links)):
+        lines.append(label)
+        lines.append(link)
+        if i < len(labels) - 1:
+            lines.append("")  # blank separator between products
 
     text = "\n".join(lines)
     logger.debug("Deal formatted successfully (%d items)", len(labels))
