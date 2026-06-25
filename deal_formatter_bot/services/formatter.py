@@ -47,6 +47,10 @@ def build_deal(
     for old_url, new_url in zip(old_urls, new_urls):
         text = text.replace(old_url, new_url, 1)
 
+    # Automatically add the Upvote footer if the user didn't already put it in the template
+    if "Upvote if this deal helped you" not in text:
+        text += "\n\n⬆️ Upvote if this deal helped you."
+
     logger.debug("Deal formatted successfully (%d items)", len(new_urls))
     return FormattedDeal(text=text, labels=[], links=new_urls)
 
