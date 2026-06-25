@@ -54,6 +54,9 @@ def build_deal(
         if i < len(labels) - 1:
             lines.append("")  # blank separator between products
 
+    lines.append("")
+    lines.append("⬆️ Upvote if this deal helped you.")
+
     text = "\n".join(lines)
     logger.debug("Deal formatted successfully (%d items)", len(labels))
 
