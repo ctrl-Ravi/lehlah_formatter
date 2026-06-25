@@ -39,8 +39,8 @@ _COLLECTION_HEADER = re.compile(r"^Collection(?:\s*URL)?\s*:", re.IGNORECASE)
 @dataclass
 class ParsedTemplate:
     """Represents a parsed deal template."""
-    header: str
-    labels: list[str]
+    raw_text: str
+    urls: list[str]
 
 
 @dataclass
@@ -64,7 +64,7 @@ class FormattedDeal:
 
 def parse_template(template: str) -> ParsedTemplate:
     """
-    Extract the header text and ordered list of labels from a deal template.
+    Extract the raw text and ordered list of URLs from a deal template.
 
     The template is expected to look like:
         Myntra : Upto 90% Off …
@@ -77,49 +77,16 @@ def parse_template(template: str) -> ParsedTemplate:
         template: Raw template text as sent by the user.
 
     Returns:
-        ParsedTemplate with `header` and `labels`.
+        ParsedTemplate with `raw_text` and `urls`.
     """
-    lines = template.strip().splitlines()
+    urls: list[str] = []
+    
+    # Find all URLs in the template to know what to replace
+    for match in _URL_PATTERN.finditer(template):
+        urls.append(match.group())
 
-    header_lines: list[str] = []
-    labels: list[str] = []
-    buffer: list[str] = []
-
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            continue
-
-        if _URL_PATTERN.search(stripped):
-            # Extract the label part from this line (if any)
-            inline_label = _URL_PATTERN.sub("", stripped).rstrip(" :|-").strip()
-            
-            if inline_label:
-                # Label and URL are on the same line
-                if not labels:
-                    header_lines.extend(buffer)
-                buffer = []
-                labels.append(inline_label)
-            else:
-                # URL is on its own line; use the last buffered line as its label
-                if buffer:
-                    label = buffer.pop()
-                    if not labels:
-                        header_lines.extend(buffer)
-                    labels.append(label.rstrip(" :|-").strip())
-                    buffer = []
-                else:
-                    labels.append("Item")
-        else:
-            buffer.append(stripped)
-
-    # Any remaining unassigned lines belong to the header if no labels were found yet
-    if not labels:
-        header_lines.extend(buffer)
-
-    header = "\n".join(header_lines).strip()
-    logger.debug("Parsed template – header: %r, labels: %s", header, labels)
-    return ParsedTemplate(header=header, labels=labels)
+    logger.debug("Parsed template found %d URLs", len(urls))
+    return ParsedTemplate(raw_text=template.strip(), urls=urls)
 
 
 # ---------------------------------------------------------------------------

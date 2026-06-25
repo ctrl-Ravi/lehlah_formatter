@@ -25,42 +25,30 @@ def build_deal(
     Returns:
         FormattedDeal on success, or an error string on mismatch.
     """
-    labels = parsed_template.labels
-    links  = parsed_collection.share_links
+    old_urls = parsed_template.urls
+    new_urls = parsed_collection.share_links
 
     # ── Validation ───────────────────────────────────────────────────────────
-    if len(labels) != len(links):
+    if len(old_urls) != len(new_urls):
         error_msg = (
             "❌ *Mismatch detected*\n\n"
-            f"Labels found: *{len(labels)}*\n"
-            f"Links found:  *{len(links)}*\n\n"
+            f"Links in Template: *{len(old_urls)}*\n"
+            f"Links in Collection: *{len(new_urls)}*\n\n"
             "Please check your input and try again."
         )
         logger.warning(
-            "Mismatch – labels=%d links=%d", len(labels), len(links)
+            "Mismatch – template_links=%d collection_links=%d", len(old_urls), len(new_urls)
         )
         return error_msg
 
     # ── Format ───────────────────────────────────────────────────────────────
-    lines: list[str] = []
+    # Replace URLs exactly as they appear in the raw text
+    text = parsed_template.raw_text
+    for old_url, new_url in zip(old_urls, new_urls):
+        text = text.replace(old_url, new_url, 1)
 
-    if parsed_template.header:
-        lines.append(parsed_template.header)
-        lines.append("")  # blank separator
-
-    for i, (label, link) in enumerate(zip(labels, links)):
-        lines.append(label)
-        lines.append(link)
-        if i < len(labels) - 1:
-            lines.append("")  # blank separator between products
-
-    lines.append("")
-    lines.append("⬆️ Upvote if this deal helped you.")
-
-    text = "\n".join(lines)
-    logger.debug("Deal formatted successfully (%d items)", len(labels))
-
-    return FormattedDeal(text=text, labels=labels, links=links)
+    logger.debug("Deal formatted successfully (%d items)", len(new_urls))
+    return FormattedDeal(text=text, labels=[], links=new_urls)
 
 
 def format_markdown(deal: FormattedDeal) -> str:
